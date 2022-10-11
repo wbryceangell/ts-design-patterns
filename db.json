@@ -1,0 +1,17 @@
+{
+  "users": [
+    {
+      "uuid": "7b78a579-462f-4c86-9674-6ce4efe6330a",
+      "created": "2022-10-11T20:56:12.301Z",
+      "name": "bryce"
+    }
+  ],
+  "articles": [
+    {
+      "uuid": "09412291-643f-4923-b26b-d9880ed29467",
+      "created": "2022-10-11T21:13:02.082Z",
+      "author": "bryce",
+      "text": "This is my first article"
+    }
+  ]
+}
