@@ -1,4 +1,4 @@
-import http from "http";
+import http, { IncomingMessage } from "http";
 import { ArticlesCrud } from "./crud/articles";
 import { CrudFactory, CrudType } from "./crud/factory";
 import { UsersCrud } from "./crud/users";
@@ -22,29 +22,17 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST") {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
-    req.on("end", async () => {
-      const json = JSON.parse(body);
-      await crud.create(json);
-      res.statusCode = 201;
-      res.end();
-    });
+    const json = await getJsonBody(req);
+    await crud.create(json);
+    res.statusCode = 201;
+    res.end();
   }
 
   if (req.method === "PATCH") {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
-    req.on("end", async () => {
-      const json = JSON.parse(body);
-      await crud.update(uuid, json);
-      res.statusCode = 204;
-      res.end();
-    });
+    const json = await getJsonBody(req);
+    await crud.update(uuid, json);
+    res.statusCode = 204;
+    res.end();
   }
 
   if (req.method === "DELETE") {
@@ -53,5 +41,23 @@ const server = http.createServer(async (req, res) => {
     res.end();
   }
 });
+
+async function getJsonBody(req: IncomingMessage) {
+  return new Promise<any>((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", async () => {
+      try {
+        const json = JSON.parse(body);
+        resolve(json);
+      } catch (e) {
+        console.warn(e);
+        reject(new Error("Failed to get JSON from request body"));
+      }
+    });
+  });
+}
 
 server.listen(8080);
