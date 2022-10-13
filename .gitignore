@@ -423,3 +423,7 @@ package-lock.json
 dist/db.js
 dist/db/database.js
 dist/db/user.js
+dist/crud/articles.js
+dist/crud/crud.js
+dist/crud/factory.js
+dist/crud/users.js

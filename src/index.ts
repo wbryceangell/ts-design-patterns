@@ -1,119 +1,55 @@
 import http from "http";
-import { v4 } from "uuid";
-import { Article, Database } from "./db/database";
-import { User, UserBuilder } from "./db/user";
+import { ArticlesCrud } from "./crud/articles";
+import { CrudFactory, CrudType } from "./crud/factory";
+import { UsersCrud } from "./crud/users";
 
 const server = http.createServer(async (req, res) => {
-  if (req.url?.startsWith("/users")) {
-    if (req.method === "GET") {
-      const data = await Database.getInstance().read();
-      res.end(JSON.stringify(data.users));
-    }
+  const crudType = req.url?.split("/")[1] as CrudType;
+  const uuid = req.url?.split("/")[2] as string;
 
-    if (req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk;
-      });
-      req.on("end", async () => {
-        const json = JSON.parse(body);
-        const [read, write] = await Database.getInstance().transaction();
-        const data = await read();
-        const user = new UserBuilder({}).setName(json.name).build();
-        data.users.push(user);
-        await write(data);
-        res.statusCode = 201;
-        res.end();
-      });
-    }
-
-    if (req.method === "PATCH") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk;
-      });
-      req.on("end", async () => {
-        const json = JSON.parse(body);
-        const [read, write] = await Database.getInstance().transaction();
-        const data = await read();
-        const uuid = req.url?.split("/")[2];
-        let user = data.users.find((user) => user.uuid === uuid) as User;
-        user = new UserBuilder(user).setName(json.name).build();
-        await write(data);
-        res.statusCode = 204;
-        res.end();
-      });
-    }
-
-    if (req.method === "DELETE") {
-      const [read, write] = await Database.getInstance().transaction();
-      const data = await read();
-      const uuid = req.url?.split("/")[2];
-      data.users = data.users.filter((user) => user.uuid !== uuid);
-      await write(data);
-      res.statusCode = 204;
-      res.end();
-    }
-  } else if (req.url?.startsWith("/articles")) {
-    if (req.method === "GET") {
-      const data = await Database.getInstance().read();
-      res.end(JSON.stringify(data.articles));
-    }
-
-    if (req.method === "POST") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk;
-      });
-      req.on("end", async () => {
-        const json = JSON.parse(body);
-        const [read, write] = await Database.getInstance().transaction();
-        const data = await read();
-        const article: Article = {
-          uuid: v4(),
-          created: new Date().toISOString(),
-          author: json.author || "",
-          text: json.text || "",
-        };
-        data.articles.push(article);
-        await write(data);
-        res.statusCode = 201;
-        res.end();
-      });
-    }
-
-    if (req.method === "PATCH") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk;
-      });
-      req.on("end", async () => {
-        const json = JSON.parse(body);
-        const [read, write] = await Database.getInstance().transaction();
-        const data = await read();
-        const uuid = req.url?.split("/")[2];
-        const article = data.articles.find((article) => article.uuid === uuid);
-        if (article) {
-          if (json.author) article.author = json.author;
-          if (json.text) article.text = json.text;
-        }
-        await write(data);
-        res.statusCode = 204;
-        res.end();
-      });
-    }
-
-    if (req.method === "DELETE") {
-      const [read, write] = await Database.getInstance().transaction();
-      const data = await read();
-      const uuid = req.url?.split("/")[2];
-      data.articles = data.articles.filter((article) => article.uuid !== uuid);
-      await write(data);
-      res.statusCode = 204;
-      res.end();
-    }
-  } else {
+  let crud: UsersCrud | ArticlesCrud;
+  try {
+    crud = CrudFactory.getInstance().get(crudType);
+  } catch (e) {
+    console.warn(e);
     res.statusCode = 404;
+    return res.end();
+  }
+
+  if (req.method === "GET") {
+    const data = await crud.read();
+    res.end(JSON.stringify(data));
+  }
+
+  if (req.method === "POST") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", async () => {
+      const json = JSON.parse(body);
+      await crud.create(json);
+      res.statusCode = 201;
+      res.end();
+    });
+  }
+
+  if (req.method === "PATCH") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", async () => {
+      const json = JSON.parse(body);
+      await crud.update(uuid, json);
+      res.statusCode = 204;
+      res.end();
+    });
+  }
+
+  if (req.method === "DELETE") {
+    await crud.delete(uuid);
+    res.statusCode = 204;
     res.end();
   }
 });
