@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
+import { User } from "./user";
 
 export class Database {
   private static instance: Database;
@@ -11,7 +12,7 @@ export class Database {
     private _writeFile = writeFile,
     _join = join
   ) {
-    this.path = _join(__dirname, "../db.json");
+    this.path = _join(__dirname, "../../db.json");
   }
 
   static getInstance() {
@@ -69,6 +70,8 @@ export class Database {
 }
 
 export type Data = { users: User[]; articles: Article[] };
-export type User = DataObject & { name: string };
 export type Article = DataObject & { author: string; text: string };
-type DataObject = { uuid: string; created: string };
+export interface DataObject {
+  uuid: string;
+  created: string;
+}

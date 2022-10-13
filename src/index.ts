@@ -1,6 +1,7 @@
 import http from "http";
 import { v4 } from "uuid";
-import { Article, Database, User } from "./db";
+import { Article, Database } from "./db/database";
+import { User, UserBuilder } from "./db/user";
 
 const server = http.createServer(async (req, res) => {
   if (req.url?.startsWith("/users")) {
@@ -18,11 +19,7 @@ const server = http.createServer(async (req, res) => {
         const json = JSON.parse(body);
         const [read, write] = await Database.getInstance().transaction();
         const data = await read();
-        const user: User = {
-          uuid: v4(),
-          created: new Date().toISOString(),
-          name: json.name || "",
-        };
+        const user = new UserBuilder({}).setName(json.name).build();
         data.users.push(user);
         await write(data);
         res.statusCode = 201;
@@ -40,8 +37,8 @@ const server = http.createServer(async (req, res) => {
         const [read, write] = await Database.getInstance().transaction();
         const data = await read();
         const uuid = req.url?.split("/")[2];
-        const user = data.users.find((user) => user.uuid === uuid);
-        if (user && json.name) user.name = json.name;
+        let user = data.users.find((user) => user.uuid === uuid) as User;
+        user = new UserBuilder(user).setName(json.name).build();
         await write(data);
         res.statusCode = 204;
         res.end();

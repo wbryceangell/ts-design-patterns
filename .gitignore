@@ -421,3 +421,5 @@ node_modules/uuid/dist/esm-node/version.js
 refactoring.txt
 package-lock.json
 dist/db.js
+dist/db/database.js
+dist/db/user.js
