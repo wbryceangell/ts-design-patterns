@@ -1,6 +1,6 @@
 export interface CRUD<T> {
-  create: (object: Exclude<T, "uuid">) => Promise<void>;
+  create: (object: T) => Promise<void>;
   read: () => Promise<T[]>;
-  update: (uuid: string, object: Partial<Exclude<T, "uuid">>) => Promise<void>;
+  update: (uuid: string, object: T) => Promise<void>;
   delete: (uuid: string) => Promise<void>;
 }

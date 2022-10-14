@@ -1,8 +1,8 @@
 import { Database } from "../db/database";
-import { User, UserBuilder } from "../db/user";
+import { IUser, UserBuilder } from "../db/user";
 import { CRUD } from "./crud";
 
-export class UsersCrud implements CRUD<User> {
+export class UsersCrud implements CRUD<IUser> {
   private static instance: UsersCrud;
 
   private constructor() {}
@@ -14,7 +14,7 @@ export class UsersCrud implements CRUD<User> {
     return UsersCrud.instance;
   }
 
-  async create(object: Exclude<User, "uuid">) {
+  async create(object: IUser) {
     const [read, write] = await Database.getInstance().transaction();
     const data = await read();
     data.users.push(new UserBuilder(object).build());
@@ -25,11 +25,15 @@ export class UsersCrud implements CRUD<User> {
     return (await Database.getInstance().read()).users;
   }
 
-  async update(uuid: string, object: Partial<Exclude<User, "uuid">>) {
+  async update(uuid: string, object: IUser) {
     const [read, write] = await Database.getInstance().transaction();
     const data = await read();
-    let user = data.users.find((user) => user.uuid === uuid) as User;
-    user = new UserBuilder(user).setName(object.name || "").build();
+    const index = data.users.findIndex((user) => user.uuid === uuid);
+    if (index === -1) throw new Error("Failed to find user");
+    const user = new UserBuilder(data.users[index])
+      .setName(object.name || (data.users[index].name as string))
+      .build();
+    data.users[index] = user;
     await write(data);
   }
 
