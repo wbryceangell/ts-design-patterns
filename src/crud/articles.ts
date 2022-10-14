@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
-import { Article, Database } from "../db/database";
+import { Article } from "../db/data";
+import { Database } from "../db/database";
 import { CRUD } from "./crud";
 
 export class ArticlesCrud implements CRUD<Article> {

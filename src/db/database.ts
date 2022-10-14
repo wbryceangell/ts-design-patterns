@@ -1,18 +1,27 @@
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
-import { User } from "./user";
+import { Data, IData } from "./data";
 
 export class Database {
   private static instance: Database;
   private operations = Promise.resolve();
   private path: string;
+  private data!: Data;
 
   private constructor(
-    private _readFile = readFile,
+    _readFile = readFile,
     private _writeFile = writeFile,
     _join = join
   ) {
     this.path = _join(__dirname, "../../db.json");
+    this.operations = this.operations
+      .then(() => {
+        return _readFile(this.path);
+      })
+      .then((buffer) => {
+        const data: IData = JSON.parse(buffer.toString());
+        this.data = new Data(data.users, data.articles);
+      });
   }
 
   static getInstance() {
@@ -23,14 +32,14 @@ export class Database {
   }
 
   read() {
-    return new Promise<Data>((resolve) => {
+    return new Promise<Data>((resolve, reject) => {
       this.operations = this.operations
         .then(() => {
-          return this._readFile(this.path);
+          resolve(this.data.clone());
         })
-        .then((buffer) => {
-          const data: Data = JSON.parse(buffer.toString());
-          resolve(data);
+        .catch((reason) => {
+          reject(reason);
+          throw reason;
         });
     });
   }
@@ -38,23 +47,31 @@ export class Database {
   transaction() {
     return new Promise<[() => Promise<Data>, (data: Data) => Promise<void>]>(
       (resolveTransaction) => {
-        const read = new Promise<Data>((resolveRead) => {
-          const write = new Promise<Data>((resolveWrite) => {
-            const written = new Promise<void>((resolveWritten) => {
-              this.operations = this.operations
-                .then(() => {
-                  return this._readFile(this.path);
-                })
-                .then((buffer) => {
-                  const data: Data = JSON.parse(buffer.toString());
-                  resolveRead(data);
-                  return write;
-                })
-                .then((data) => {
-                  return this._writeFile(this.path, JSON.stringify(data));
-                })
-                .then(resolveWritten);
-            });
+        const read = new Promise<Data>((resolveRead, rejectRead) => {
+          const write = new Promise<Data>((resolveWrite, rejectWrite) => {
+            const written = new Promise<void>(
+              (resolveWritten, rejectWritten) => {
+                this.operations = this.operations
+                  .then(() => {
+                    resolveRead(this.data.clone());
+                    return write;
+                  })
+                  .then((data) => {
+                    this.data = data.clone();
+                    return this._writeFile(
+                      this.path,
+                      JSON.stringify(this.data)
+                    );
+                  })
+                  .then(resolveWritten)
+                  .catch((reason) => {
+                    rejectRead(reason);
+                    rejectWrite(reason);
+                    rejectWritten(reason);
+                    throw reason;
+                  });
+              }
+            );
             resolveTransaction([
               () => read,
               (data) => {
@@ -67,11 +84,4 @@ export class Database {
       }
     );
   }
-}
-
-export type Data = { users: User[]; articles: Article[] };
-export type Article = DataObject & { author: string; text: string };
-export interface DataObject {
-  uuid: string;
-  created: string;
 }
