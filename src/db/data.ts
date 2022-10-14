@@ -1,7 +1,8 @@
+import { IArticle } from "./article";
 import { IUser } from "./user";
 
 export class Data implements IDataPrototype {
-  constructor(public users: IUser[], public articles: Article[]) {
+  constructor(public users: IUser[], public articles: IArticle[]) {
     if (!users || !articles) throw new Error("Missing data");
   }
 
@@ -20,12 +21,5 @@ interface IDataPrototype extends IData {
 
 export interface IData {
   users: IUser[];
-  articles: Article[];
-}
-
-export type Article = IDataObject & { author: string; text: string };
-
-export interface IDataObject {
-  uuid: string;
-  created: string;
+  articles: IArticle[];
 }

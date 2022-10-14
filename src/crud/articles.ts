@@ -1,9 +1,8 @@
-import { v4 } from "uuid";
-import { Article } from "../db/data";
+import { ArticleBuilder, IArticle } from "../db/article";
 import { Database } from "../db/database";
 import { CRUD } from "./crud";
 
-export class ArticlesCrud implements CRUD<Article> {
+export class ArticlesCrud implements CRUD<IArticle> {
   private static instance: ArticlesCrud;
 
   private constructor() {}
@@ -15,16 +14,10 @@ export class ArticlesCrud implements CRUD<Article> {
     return ArticlesCrud.instance;
   }
 
-  async create(object: Exclude<Article, "uuid">) {
+  async create(object: IArticle) {
     const [read, write] = await Database.getInstance().transaction();
     const data = await read();
-    const article: Article = {
-      uuid: v4(),
-      created: new Date().toISOString(),
-      author: object.author || "",
-      text: object.text || "",
-    };
-    data.articles.push(article);
+    data.articles.push(new ArticleBuilder(object).build());
     await write(data);
   }
 
@@ -32,14 +25,16 @@ export class ArticlesCrud implements CRUD<Article> {
     return (await Database.getInstance().read()).articles;
   }
 
-  async update(uuid: string, object: Partial<Exclude<Article, "uuid">>) {
+  async update(uuid: string, object: IArticle) {
     const [read, write] = await Database.getInstance().transaction();
     const data = await read();
-    const article = data.articles.find((article) => article.uuid === uuid);
-    if (article) {
-      if (object.author) article.author = object.author;
-      if (object.text) article.text = object.text;
-    }
+    const index = data.articles.findIndex((article) => article.uuid === uuid);
+    if (index === -1) throw new Error("Failed to find article");
+    const article = new ArticleBuilder(data.articles[index])
+      .setAuthor(object.author || (data.articles[index].author as string))
+      .setText(object.text || (data.articles[index].text as string))
+      .build();
+    data.articles[index] = article;
     await write(data);
   }
 

@@ -50,7 +50,7 @@ class User implements IUserPrototype {
   }
 }
 
-interface IUserPrototype {
+interface IUserPrototype extends IUser {
   clone(): IUserPrototype;
 }
 

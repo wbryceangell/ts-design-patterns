@@ -1,1 +1,32 @@
-{"users":[{"uuid":"7b78a579-462f-4c86-9674-6ce4efe6330a","created":"2022-10-11T20:56:12.301Z","name":"bryce"},{"uuid":"4b816b5a-ed2b-4254-999f-c96d0c3eab34","created":"2022-10-12T16:41:31.644Z","name":"whit"},{"uuid":"8b283d2e-fd59-469d-9269-a7269f1c3ffa","created":"2022-10-14T18:51:25.671Z","name":"steve"},{"uuid":"87762a88-b2e4-4c5c-9045-4afdaf77856c","created":"2022-10-14T18:53:35.066Z","name":"chris"}],"articles":[{"uuid":"09412291-643f-4923-b26b-d9880ed29467","created":"2022-10-11T21:13:02.082Z","author":"bryce","text":"This is my first article"}]}
+{
+  "users": [
+    {
+      "uuid": "7b78a579-462f-4c86-9674-6ce4efe6330a",
+      "created": "2022-10-11T20:56:12.301Z",
+      "name": "bryce"
+    },
+    {
+      "uuid": "4b816b5a-ed2b-4254-999f-c96d0c3eab34",
+      "created": "2022-10-12T16:41:31.644Z",
+      "name": "whit"
+    },
+    {
+      "uuid": "8b283d2e-fd59-469d-9269-a7269f1c3ffa",
+      "created": "2022-10-14T18:51:25.671Z",
+      "name": "steve"
+    },
+    {
+      "uuid": "87762a88-b2e4-4c5c-9045-4afdaf77856c",
+      "created": "2022-10-14T18:53:35.066Z",
+      "name": "chris"
+    }
+  ],
+  "articles": [
+    {
+      "uuid": "1f37debb-4d2a-4f20-a19d-e0f2cc532af6",
+      "created": "2022-10-14T19:15:42.493Z",
+      "author": "bryce",
+      "text": "whit is the best Java developer ever!"
+    }
+  ]
+}
